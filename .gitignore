@@ -216,3 +216,21 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# NIDS project specific
+logs/
+*.pcap
+*.pcapng
+*.db
+.env
+
+# macOS
+.DS_Store
+
+# Virtual environment (in case venv is named differently)
+.venv/
+
+# Test artifacts
+.pytest_cache/
+htmlcov/
+.coverage
