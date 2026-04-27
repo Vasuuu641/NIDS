@@ -1,0 +1,25 @@
+capture:
+  interface: eth0
+  promiscuous: true
+
+rules:
+  port_scan:
+    enabled: true
+    threshold: 20
+    window_seconds: 5
+
+  syn_flood:
+    enabled: true
+    threshold: 100
+    window_seconds: 1
+
+  arp_spoof:
+    enabled: true
+
+logging:
+  path: logs/events.json
+  level: WARNING
+
+alerts:
+  console: true
+  deduplicate_window_seconds: 10
