@@ -7,12 +7,10 @@ rules:
     enabled: true
     threshold: 20
     window_seconds: 5
-
   syn_flood:
     enabled: true
     threshold: 100
     window_seconds: 1
-
   arp_spoof:
     enabled: true
 
