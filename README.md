@@ -174,8 +174,8 @@ Attack simulation scripts for local isolated testing are included in `tests/`.
 - [x] Configuration structure (`config.yaml`)
 - [x] Detection rule files scaffolded
 - [x] Test files scaffolded
-- [ ] Packet capture module (`capture.py`)
-- [ ] ARP spoofing detector
+- [x] Packet capture module (`capture.py`)
+- [x] ARP spoofing detector
 - [ ] Port scan detector
 - [ ] SYN flood detector
 - [ ] Alert manager
