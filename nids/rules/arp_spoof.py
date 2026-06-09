@@ -15,10 +15,12 @@ mac_table = {}
 
 # detection logic - is this MAC address associated with this IP address in the MAC table? If not, raise an alert. Trusts only the first address it sees
 def detect_arp_spoof(packet):
-    if not packet.haslayer("ARP"):
+    print(f"DEBUG: packet type={type(packet)}, has ARP={packet.haslayer(ARP)}")
+    if not packet.haslayer(ARP):
         return
 
-    arp_layer = packet.getlayer("ARP")
+    arp_layer = packet.getlayer(ARP)
+    print(f"DEBUG: op={arp_layer.op}, type={type(arp_layer.op)}")
 
     # only analyse replies since that's where the attack happens, and ignore requests
     if arp_layer.op != 2:
@@ -27,11 +29,13 @@ def detect_arp_spoof(packet):
     ip_address = arp_layer.psrc
     mac_address = arp_layer.hwsrc
 
+    print(f"DEBUG: ip={ip_address}, mac={mac_address}, table={mac_table}")
+
     if ip_address in mac_table:
         if mac_table[ip_address] != mac_address:
             # alert call if MAC address associated with the IP address has changed
             print(f"ALERT: ARP spoofing detected! IP: {ip_address} is associated with MAC: {mac_table[ip_address]} but now is associated with MAC: {mac_address}")
-        else:
-            # new IP address, add it to the MAC table
-            mac_table[ip_address] = mac_address
+    else:
+        # new IP address, add it to the MAC table
+        mac_table[ip_address] = mac_address
 
