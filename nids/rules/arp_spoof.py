@@ -14,7 +14,10 @@ from scapy.all import ARP
 mac_table = {}
 
 # detection logic - is this MAC address associated with this IP address in the MAC table? If not, raise an alert. Trusts only the first address it sees
-def detect_arp_spoof(packet):
+def detect_arp_spoof(packet, table = None):
+    if table is None:
+        table = mac_table
+
     print(f"DEBUG: packet type={type(packet)}, has ARP={packet.haslayer(ARP)}")
     if not packet.haslayer(ARP):
         return
@@ -29,13 +32,13 @@ def detect_arp_spoof(packet):
     ip_address = arp_layer.psrc
     mac_address = arp_layer.hwsrc
 
-    print(f"DEBUG: ip={ip_address}, mac={mac_address}, table={mac_table}")
+    print(f"DEBUG: ip={ip_address}, mac={mac_address}, table={table}")
 
-    if ip_address in mac_table:
-        if mac_table[ip_address] != mac_address:
+    if ip_address in table:
+        if table[ip_address] != mac_address:
             # alert call if MAC address associated with the IP address has changed
-            print(f"ALERT: ARP spoofing detected! IP: {ip_address} is associated with MAC: {mac_table[ip_address]} but now is associated with MAC: {mac_address}")
+            print(f"ALERT: ARP spoofing detected! IP: {ip_address} is associated with MAC: {table[ip_address]} but now is associated with MAC: {mac_address}")
     else:
         # new IP address, add it to the MAC table
-        mac_table[ip_address] = mac_address
+        table[ip_address] = mac_address
 
