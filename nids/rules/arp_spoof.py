@@ -18,21 +18,17 @@ def detect_arp_spoof(packet, table = None):
     if table is None:
         table = mac_table
 
-    print(f"DEBUG: packet type={type(packet)}, has ARP={packet.haslayer(ARP)}")
     if not packet.haslayer(ARP):
         return
 
     arp_layer = packet.getlayer(ARP)
-    print(f"DEBUG: op={arp_layer.op}, type={type(arp_layer.op)}")
-
+   
     # only analyse replies since that's where the attack happens, and ignore requests
     if arp_layer.op != 2:
         return
         
     ip_address = arp_layer.psrc
     mac_address = arp_layer.hwsrc
-
-    print(f"DEBUG: ip={ip_address}, mac={mac_address}, table={table}")
 
     if ip_address in table:
         if table[ip_address] != mac_address:
