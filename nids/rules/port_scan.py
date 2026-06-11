@@ -27,6 +27,17 @@ def detect_port_scan(packet, tracker = None, threshold = 15, time_window = 10, a
     
     dst_port = tcp_layer.dport
     now = time.time()
+    
+    # making the detection logic more robust by using both plain dict and defaultdict
+    if src_ip not in tracker:
+        tracker[src_ip] = {
+            'ports': set(),
+            'first_seen': now
+        }
+    
+    # Following rule of no other packets should be counted towards the port scan detection, we only consider SYN packets for counting towards the port scan detection
+    if tcp_layer.flags != "S":
+        return
 
     # reset the tracker if the time window has passed
     if now - tracker[src_ip]['first_seen'] > time_window:
