@@ -176,8 +176,8 @@ Attack simulation scripts for local isolated testing are included in `tests/`.
 - [x] Test files scaffolded
 - [x] Packet capture module (`capture.py`)
 - [x] ARP spoofing detector
-- [ ] Port scan detector
-- [ ] SYN flood detector
+- [x] Port scan detector
+- [x] SYN flood detector
 - [ ] Alert manager
 - [ ] Storage and logging
 - [ ] CLI interface

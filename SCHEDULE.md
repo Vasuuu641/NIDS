@@ -98,12 +98,12 @@
 
 ## Overall Checklist
 
-- [ ] Packet capture module (`capture.py`)
-- [ ] ARP spoofing detector + tests passing
-- [ ] Port scan detector + tests passing
-- [ ] SYN flood detector + tests passing
-- [ ] Alert manager
-- [ ] Storage and logging
+- [x] Packet capture module (`capture.py`)
+- [x] ARP spoofing detector + tests passing
+- [x] Port scan detector + tests passing
+- [x] SYN flood detector + tests passing
+- [] Alert manager
+- [] Storage and logging
 - [ ] CLI interface
 - [ ] CICIDS2017 dataset validation documented
 - [ ] ML anomaly detection layer
