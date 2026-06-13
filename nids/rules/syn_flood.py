@@ -7,6 +7,7 @@
 
 from collections import defaultdict
 from datetime import datetime, timedelta
+from scapy import packet
 from scapy.all import sniff, TCP, IP
 
 # Define the thresholds and time window
@@ -14,42 +15,52 @@ SYN_THRESHOLD = 100  # Number of SYN packets to trigger an alert
 ACK_THRESHOLD = 10   # Number of ACK packets to consider the connection healthy
 TIME_WINDOW = timedelta(seconds=10)  # Time window for counting packets
 
-# Initialize counters for each source IP
-syn_counters = defaultdict(int)
-ack_counters = defaultdict(int)
-last_reset_time = defaultdict(lambda: datetime.now())
+# Modified data structure - 1 dictionary keyed by IP address of attacker which holds the syn_count, syn_Ack_count and the window start time
+ip_dict = defaultdict(lambda: {'syn_count': 0, 'synack_count': 0, 'window_start': datetime.now()})
+
 
 # Function to reset counters for a specific source IP
-def reset_counters(src_ip):
-    syn_counters[src_ip] = 0
-    ack_counters[src_ip] = 0
-    last_reset_time[src_ip] = datetime.now()
+def reset_counters(ip):
+    ip_dict[ip]['syn_count'] = 0
+    ip_dict[ip]['synack_count'] = 0
+    ip_dict[ip]['window_start'] = datetime.now()
 
-# Function to check for SYN flood attacks
-def check_syn_flood(src_ip):
-    current_time = datetime.now()
-    if current_time - last_reset_time[src_ip] > TIME_WINDOW:
-        reset_counters(src_ip)
 
-    if syn_counters[src_ip] > SYN_THRESHOLD and ack_counters[src_ip] < ACK_THRESHOLD:
-        print(f"Potential SYN flood attack detected from {src_ip}!")
-        # Here you can add additional actions, such as logging or alerting
+# Function to check for the syn_flood
+def check_syn_flood(ip):
+    counters = ip_dict[ip]
+    if counters['syn_count'] > SYN_THRESHOLD and counters['synack_count'] < ACK_THRESHOLD:
+        print(f"Potential SYN flood attack detected from {ip}!")
 
-# Packet processing function
+# function to process each packet and update counters
 def process_packet(packet):
-    if packet.haslayer(TCP) and packet.haslayer(IP):
-        src_ip = packet[IP].src
-        tcp_flags = packet[TCP].flags
+    if not packet.haslayer(TCP):
+        return
+    
+    tcp_flags = packet[TCP].flags
+    
+    # determing the flag type 
+    is_syn_only = (tcp_flags & 0x12) == 0x02   # SYN set, ACK not set
+    is_syn_ack  = (tcp_flags & 0x12) == 0x12   # both SYN and ACK set
 
-        # Check for SYN packets
-        if tcp_flags & 0x02:  # SYN flag is set
-            syn_counters[src_ip] += 1
-            check_syn_flood(src_ip)
+    if is_syn_only:
+        ip = packet[IP].src
+    elif is_syn_ack:
+        ip = packet[IP].dst
+    else:
+        return  # not relevant to this detector
+    
+    # step 4: reset the window if the time window has expired
+    if datetime.now() - ip_dict[ip]['window_start'] > TIME_WINDOW:
+        reset_counters(ip)
 
-        # Check for ACK packets
-        elif tcp_flags & 0x10:  # ACK flag is set
-            ack_counters[src_ip] += 1
-            check_syn_flood(src_ip)
+    # step 5: update the counters based on the packet type
+    if is_syn_only:
+        ip_dict[ip]['syn_count'] += 1
+    elif is_syn_ack:
+        ip_dict[ip]['synack_count'] += 1
 
-# Start sniffing packets
-sniff(prn=process_packet, filter="tcp", store=0)
+    # step 6: check for allert conditions
+    check_syn_flood(ip)
+
+
