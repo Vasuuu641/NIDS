@@ -20,4 +20,4 @@
 from scapy.all import sniff
 
 def start_capture(callback, filter_string, interface):
-    sniff(prn=callback, filter=filter_string, iface=interface, store=False, promisc=True)
+    sniff(prn=callback, filter=filter_string, iface=interface, store=False, promisc=True, quiet=True)

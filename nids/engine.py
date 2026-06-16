@@ -2,6 +2,7 @@
 # central orchestration point to run all detectors
 
 # step 1 : read config.yaml file and load the configuration settings
+from scapy import packet
 import yaml
 
 # step 2: import the necessary modules for each attack type
@@ -27,6 +28,7 @@ if config.get("rules", {}).get("syn_flood", {}).get("enabled", False):
 
 # step 4: callback function to call all enabled detectors for each packet
 def call_detectors(packet):
+    print(f"DEBUG: {packet.summary()}")
     for detector in enabled_detectors:
         detector(packet)
 
@@ -36,4 +38,4 @@ def call_detectors(packet):
 config_interface = config["capture"]["interface"]
 
 # call start capture from capture.py with the callback function, filter string and interface
-start_capture(call_detectors, "arp or tcp",config_interface)
+start_capture(call_detectors, "ip and tcp",config_interface)
