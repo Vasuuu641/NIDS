@@ -10,7 +10,7 @@ from nids.rules.port_scan import detect_port_scan
 from nids.rules.syn_flood import process_packet as detect_syn_flood
 
 # step 5 - continued - import capture.py
-from capture import start_capture
+from nids.capture import start_capture
 
 
 with open("config/config.yaml", "r") as f:
