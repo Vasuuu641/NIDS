@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from scapy.all import TCP, IP
 
 # Define the thresholds and time window
-SYN_THRESHOLD = 10  # Number of SYN packets to trigger an alert
+SYN_THRESHOLD = 100  # Number of SYN packets to trigger an alert
 ACK_THRESHOLD = 10   # Number of ACK packets to consider the connection healthy
 TIME_WINDOW = timedelta(seconds=10)  # Time window for counting packets
 
@@ -28,14 +28,16 @@ def reset_counters(ip):
 
 
 # Function to check for the syn_flood
-def check_syn_flood(ip):
-    counters = ip_dict[ip]
+def check_syn_flood(key):
+    counters = ip_dict[key]
     if counters['syn_count'] > SYN_THRESHOLD and counters['synack_count'] < ACK_THRESHOLD and not counters['alerted']:
-        print(f"Potential SYN flood attack detected from {ip}!")
+        attacker, target, port = key
+        print(f"Potential SYN flood: {attacker} flooding {target}:{port}!")
         counters['alerted'] = True
    
 
 # function to process each packet and update counters
+# logic needs to change to map each syn_ack differently
 def process_packet(packet):
     if not packet.haslayer(TCP):
         return
@@ -50,23 +52,33 @@ def process_packet(packet):
     is_syn_ack  = (tcp_flags & 0x12) == 0x12   # both SYN and ACK set
 
     if is_syn_only:
-        ip = packet[IP].src
+        # use the key
+        attacker_ip = packet[IP].src
+        target_ip = packet[IP].dst
+        target_port = packet[TCP].dport
     elif is_syn_ack:
-        ip = packet[IP].dst
+        attacker_ip = packet[IP].dst
+        target_ip = packet[IP].src
+        target_port = packet[TCP].sport
     else:
         return  # not relevant to this detector
     
+    # define the key to use everywhere for better design
+    key = (attacker_ip, target_ip, target_port)
+    
     # step 4: reset the window if the time window has expired
-    if datetime.now() - ip_dict[ip]['window_start'] > TIME_WINDOW:
-        reset_counters(ip)
+    if datetime.now() - ip_dict[key]['window_start'] > TIME_WINDOW:
+        reset_counters(key)
 
     # step 5: update the counters based on the packet type
+    # for syn only packet, we need attacker ip, target ip and target port
     if is_syn_only:
-        ip_dict[ip]['syn_count'] += 1
+        ip_dict[key]['syn_count'] += 1
     elif is_syn_ack:
-        ip_dict[ip]['synack_count'] += 1
+        ip_dict[key]['synack_count'] += 1
+        
 
     # step 6: check for alert conditions
-    check_syn_flood(ip)
+    check_syn_flood(key)
 
 

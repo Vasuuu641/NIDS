@@ -28,7 +28,6 @@ if config.get("rules", {}).get("syn_flood", {}).get("enabled", False):
 
 # step 4: callback function to call all enabled detectors for each packet
 def call_detectors(packet):
-    print(f"DEBUG: {packet.summary()}")
     for detector in enabled_detectors:
         detector(packet)
 
