@@ -20,11 +20,11 @@ ip_dict = defaultdict(lambda: {'syn_count': 0, 'synack_count': 0, 'window_start'
 
 
 # Function to reset counters for a specific source IP
-def reset_counters(ip):
-    ip_dict[ip]['syn_count'] = 0
-    ip_dict[ip]['synack_count'] = 0
-    ip_dict[ip]['window_start'] = datetime.now()
-    ip_dict[ip]['alerted'] = False
+def reset_counters(key):
+    ip_dict[key]['syn_count'] = 0
+    ip_dict[key]['synack_count'] = 0
+    ip_dict[key]['window_start'] = datetime.now()
+    ip_dict[key]['alerted'] = False
 
 
 # Function to check for the syn_flood
