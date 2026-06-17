@@ -52,25 +52,31 @@ def process_packet(packet):
     is_syn_ack  = (tcp_flags & 0x12) == 0x12   # both SYN and ACK set
 
     if is_syn_only:
-        ip = packet[IP].src
+        # we need attacker ip, target ip and target port to map the syn only packet
+        attacker_ip = packet[IP].src
+        target_ip = packet[IP].dst
+        target_port = packet[TCP].dport
     elif is_syn_ack:
-        ip = packet[IP].dst
+        attacker_ip = packet[IP].dst
+        target_ip = packet[IP].src
+        target_port = packet[TCP].sport
     else:
         return  # not relevant to this detector
     
     # step 4: reset the window if the time window has expired
-    if datetime.now() - ip_dict[ip]['window_start'] > TIME_WINDOW:
-        reset_counters(ip)
+    if datetime.now() - ip_dict[(attacker_ip, target_ip, target_port)]['window_start'] > TIME_WINDOW:
+        reset_counters((attacker_ip, target_ip, target_port))
 
     # step 5: update the counters based on the packet type
+    # for syn only packet, we need attacker ip, target ip and target port
     if is_syn_only:
-        ip_dict[ip]['syn_count'] += 1
-        print(f"COUNTER CHECK: ip={ip} syn_count={ip_dict[ip]['syn_count']} window_start={ip_dict[ip]['window_start']}")
+        ip_dict[(attacker_ip, target_ip, target_port)]['syn_count'] += 1
+        print(f"COUNTER CHECK: ip={attacker_ip} syn_count={ip_dict[(attacker_ip, target_ip, target_port)]['syn_count']} window_start={ip_dict[(attacker_ip, target_ip, target_port)]['window_start']}")
     elif is_syn_ack:
-        ip_dict[ip]['synack_count'] += 1
+        ip_dict[(attacker_ip, target_ip, target_port)]['synack_count'] += 1
         
 
     # step 6: check for alert conditions
-    check_syn_flood(ip)
+    check_syn_flood((attacker_ip, target_ip, target_port))
 
 
