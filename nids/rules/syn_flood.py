@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from scapy.all import TCP, IP
 
 # Define the thresholds and time window
-SYN_THRESHOLD = 10  # Number of SYN packets to trigger an alert
+SYN_THRESHOLD = 100  # Number of SYN packets to trigger an alert
 ACK_THRESHOLD = 10   # Number of ACK packets to consider the connection healthy
 TIME_WINDOW = timedelta(seconds=10)  # Time window for counting packets
 
@@ -74,7 +74,6 @@ def process_packet(packet):
     # for syn only packet, we need attacker ip, target ip and target port
     if is_syn_only:
         ip_dict[key]['syn_count'] += 1
-        print(f"COUNTER CHECK: ip={attacker_ip} syn_count={ip_dict[key]['syn_count']} window_start={ip_dict[key]['window_start']}")
     elif is_syn_ack:
         ip_dict[key]['synack_count'] += 1
         
