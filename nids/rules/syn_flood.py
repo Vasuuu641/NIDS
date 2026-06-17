@@ -28,14 +28,16 @@ def reset_counters(ip):
 
 
 # Function to check for the syn_flood
-def check_syn_flood(ip):
-    counters = ip_dict[ip]
+def check_syn_flood(key):
+    counters = ip_dict[key]
     if counters['syn_count'] > SYN_THRESHOLD and counters['synack_count'] < ACK_THRESHOLD and not counters['alerted']:
-        print(f"Potential SYN flood attack detected from {ip}!")
+        attacker, target, port = key
+        print(f"Potential SYN flood: {attacker} flooding {target}:{port}!")
         counters['alerted'] = True
    
 
 # function to process each packet and update counters
+# logic needs to change to map each syn_ack differently
 def process_packet(packet):
     if not packet.haslayer(TCP):
         return
@@ -63,8 +65,10 @@ def process_packet(packet):
     # step 5: update the counters based on the packet type
     if is_syn_only:
         ip_dict[ip]['syn_count'] += 1
+        print(f"COUNTER CHECK: ip={ip} syn_count={ip_dict[ip]['syn_count']} window_start={ip_dict[ip]['window_start']}")
     elif is_syn_ack:
         ip_dict[ip]['synack_count'] += 1
+        
 
     # step 6: check for alert conditions
     check_syn_flood(ip)
