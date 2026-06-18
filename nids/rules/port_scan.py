@@ -38,6 +38,9 @@ def detect_port_scan(packet, tracker = None, threshold = 15, time_window = 10, a
     # step 3 - initialize or fix the tracker entry for this source IP
     now = time.time()
 
+    if src_ip not in tracker:
+        tracker[src_ip] = {'ports': set(), 'first_seen': now, 'alerted': False}
+
     # step 4: check window expiry, reset if necessary - reset nust include alert == 'False'
     if now - tracker[src_ip]['first_seen'] > time_window:
         tracker[src_ip] = {'ports': set(), 'first_seen': now, 'alerted': False}
@@ -46,7 +49,7 @@ def detect_port_scan(packet, tracker = None, threshold = 15, time_window = 10, a
     tracker[src_ip]['ports'].add(dst_port)
 
     # step 6: check the alert condition with alerted flag
-    if len(tracker[src_ip]['ports']) > threshold:
+    if len(tracker[src_ip]['ports']) > threshold and not tracker[src_ip]['alerted']:
         alert_callback(f"Port scan detected from {src_ip} on ports: {tracker[src_ip]['ports']}")
         # reset the tracker for this IP to avoid repeated alerts
         tracker[src_ip] = {'ports': set(), 'first_seen': now, 'alerted': True}
