@@ -9,49 +9,61 @@ from collections import defaultdict
 import time
 
 # track {source_ip: {ports: set(), first_seen: timestamp}}
-connection_tracker = defaultdict(lambda: {'ports': set(), 'first_seen': time.time()})
+connection_tracker = defaultdict(lambda: {'ports': set(), 'first_seen': time.time(), 'alerted': False})
 
 # port scanning detection function
 def detect_port_scan(packet, tracker = None, threshold = 15, time_window = 10, alert_callback = print):
-    if tracker is None:
-        tracker = connection_tracker
-    
+    # step 1: check for ignore cases - bail early if packet is irrelevant
+
+    # not TCP - return
     if not packet.haslayer(TCP):
         return
     
+    # not IP - return
+    if not packet.haslayer('IP'):
+        return
+    
+    # not a SYN only packet - return
     tcp_layer = packet[TCP]
-
-    src_ip = packet.src if hasattr(packet, 'src') else None
-    if src_ip is None:
-        return
+    if not (tcp_layer.flags & 0x02) or (tcp_layer.flags & 0x10):
+        return  # not a SYN-only packet
     
+    if tracker is None:
+        tracker = connection_tracker
+
+    # step 2 - extract identity - src_ip and dst_port
+    src_ip = packet['IP'].src
     dst_port = tcp_layer.dport
+
+    # step 3 - initialize or fix the tracker entry for this source IP
     now = time.time()
-    
-    # making the detection logic more robust by using both plain dict and defaultdict
-    if src_ip not in tracker:
-        tracker[src_ip] = {
-            'ports': set(),
-            'first_seen': now
-        }
-    
-    # Following rule of no other packets should be counted towards the port scan detection, we only consider SYN packets for counting towards the port scan detection
-    if tcp_layer.flags != "S":
-        return
 
-    # reset the tracker if the time window has passed
+    # step 4: check window expiry, reset if necessary - reset nust include alert == 'False'
     if now - tracker[src_ip]['first_seen'] > time_window:
-        tracker[src_ip] = {'ports': set(), 'first_seen': now}
-
-    # add the port to the set of probed ports
+        tracker[src_ip] = {'ports': set(), 'first_seen': now, 'alerted': False}
+    
+    # step 5: add port to set
     tracker[src_ip]['ports'].add(dst_port)
 
-    # if unique ports probed exceed the threshold, trigger an alert
+    # step 6: check the alert condition with alerted flag
     if len(tracker[src_ip]['ports']) > threshold:
         alert_callback(f"Port scan detected from {src_ip} on ports: {tracker[src_ip]['ports']}")
         # reset the tracker for this IP to avoid repeated alerts
-        tracker[src_ip] = {'ports': set(), 'first_seen': now}
+        tracker[src_ip] = {'ports': set(), 'first_seen': now, 'alerted': True}
 
-    # reset after alerting to avoid repeated alerts for the same scan
-    if len(tracker[src_ip]['ports']) > threshold:
-        tracker[src_ip] = {'ports': set(), 'first_seen': now}
+
+
+    
+    
+
+    
+
+
+    
+   
+
+   
+
+   
+   
+   
