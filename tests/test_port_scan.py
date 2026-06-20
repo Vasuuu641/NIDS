@@ -78,3 +78,19 @@ def test_non_tcp_packets():
     detect_port_scan(packet, tracker=tracker, alert_callback=alert_messages.append)
     assert len(alert_messages) == 0
     assert "192.168.100.3" not in tracker
+
+# test to send 16 ports then send a few more to see that assert(len(alert_messages) == 1) is still valid and no more alerts are raised
+def test_no_additional_alerts_after_first():
+    tracker = {}
+    alert_messages = []
+
+    # send 16 packets to different ports
+    for port in range(80, 96):
+        packet = IP(src="192.168.1.1") / TCP(sport=12345, dport=port, flags="S")
+        detect_port_scan(packet, tracker=tracker, alert_callback=alert_messages.append)
+
+    # send a few more packets to different ports
+    for port in range(96, 100):
+        packet = IP(src="192.168.1.1") / TCP(sport=12345, dport=port, flags="S")
+        detect_port_scan(packet, tracker=tracker, alert_callback=alert_messages.append)
+        assert len(alert_messages) == 0 or len(alert_messages) == 1
