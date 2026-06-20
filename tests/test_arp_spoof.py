@@ -6,13 +6,10 @@
 
 import sys
 import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from rich import table
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'nids', 'rules'))
-
-import pytest
 from scapy.all import ARP
-from arp_spoof import detect_arp_spoof, mac_table
+from nids.rules.arp_spoof import detect_arp_spoof
 
 def test_mac_table_update():
     table = {}
@@ -40,10 +37,13 @@ def test_alert_on_mac_change(capsys):
     # call the detection function with the second fake packet
     detect_arp_spoof(arp_reply2, table=table)
 
-    # check if an alert is raised
-    # since the alert is printed to the console, we can capture the output using pytest's capsys fixture
     captured = capsys.readouterr()
-    assert "ALERT: ARP spoofing detected!" in captured.out
+
+    # check if an alert is raised
+    assert "ARP_SPOOF" in captured.out
+    assert "192.168.1.1" in captured.out
+    
+    # check for alert object via dispatch_alert function
 
 def test_no_alert_on_mac_same(capsys):
     table = {}
@@ -62,7 +62,7 @@ def test_no_alert_on_mac_same(capsys):
     # check if an alert is raised
     # since the alert is printed to the console, we can capture the output using pytest's capsys fixture
     captured = capsys.readouterr()
-    assert "ALERT: ARP spoofing detected!" not in captured.out
+    assert "ARP_SPOOF" not in captured.out
 
 def test_ignore_arp_request():
     table = {}
