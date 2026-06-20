@@ -7,7 +7,6 @@
 import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
-import pytest
 
 from scapy.all import ARP
 from nids.rules.arp_spoof import detect_arp_spoof

@@ -13,9 +13,9 @@ from unittest.mock import patch
 
 from scapy.all import IP, TCP, UDP
 import time
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'nids', 'rules'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from port_scan import detect_port_scan, connection_tracker
+from nids.rules.port_scan import detect_port_scan
 
 def test_single_syn():
     tracker = {}
@@ -48,7 +48,7 @@ def test_syn_to_multiple_ports_over_time():
 
     # no alert yet — only 15 ports, threshold is 15
     # now fake that 11 seconds have passed
-    with patch('port_scan.time.time', return_value=time.time() + 11):
+    with patch('nids.rules.port_scan.time.time', return_value=time.time() + 11):
         # send one more packet in the "new" time window
         packet = IP(src="192.168.3.100") / TCP(
             sport=12345, dport=100, flags="S")

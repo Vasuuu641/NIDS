@@ -14,7 +14,7 @@ import time
 connection_tracker = defaultdict(lambda: {'ports': set(), 'first_seen': time.time(), 'alerted': False})
 
 # port scanning detection function
-def detect_port_scan(packet, tracker = None, threshold = 15, time_window = 10, alert_callback = print):
+def detect_port_scan(packet, tracker = None, threshold = 15, time_window = 10, alert_callback = dispatch_alert):
     # step 1: check for ignore cases - bail early if packet is irrelevant
 
     # not TCP - return
@@ -52,21 +52,18 @@ def detect_port_scan(packet, tracker = None, threshold = 15, time_window = 10, a
 
     # step 6: check the alert condition with alerted flag
     if len(tracker[src_ip]['ports']) > threshold and not tracker[src_ip]['alerted']:
-
-        # create an alert object with the relevant information about the detected port scan attack
+        # create an alert object with the relevant information about the detected port scan
         alert = Alert(
-            attack_type="PORT_SCAN",
-            source_ip=src_ip,
-            severity="MEDIUM",
-            message=f"Port scan detected on ports: {tracker[src_ip]['ports']}",
-            extra={"ports": list(tracker[src_ip]['ports'])}
-        )
-        dispatch_alert(alert)
-        # reset the tracker for this IP to avoid repeated alerts
-        tracker[src_ip] = {'ports': set(), 'first_seen': now, 'alerted': True}
+        attack_type="PORT_SCAN",
+        source_ip=src_ip,
+        severity="MEDIUM",
+        message=f"Port scan detected on ports: {tracker[src_ip]['ports']}",
+        extra={"ports": list(tracker[src_ip]['ports'])}
+    )
+        alert_callback(alert)
+        tracker[src_ip]['alerted'] = True  
 
-
-
+        
     
     
 
