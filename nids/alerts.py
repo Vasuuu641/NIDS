@@ -3,6 +3,10 @@
 # 2. Format a structured alert object
 # 3. Output this to the console for now. Later on output logs for phase 3
 
+# summary of alerts.py job - formats and displays an alert. 
+# Doesn't decide when to alert (the detectors do that), doesn't persist anything to disk. 
+# Just: given structured data about an attack, produce a readable, colored console line.
+
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path

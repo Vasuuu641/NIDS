@@ -8,6 +8,7 @@
 
 # imports
 from scapy.all import ARP
+from nids.alerts import Alert, dispatch_alert
 
 
 # define the MAC table in the form of a dictionary, where the key is the IP address and the value is the MAC address
@@ -32,8 +33,16 @@ def detect_arp_spoof(packet, table = None):
 
     if ip_address in table:
         if table[ip_address] != mac_address:
-            # alert call if MAC address associated with the IP address has changed
-            print(f"ALERT: ARP spoofing detected! IP: {ip_address} is associated with MAC: {table[ip_address]} but now is associated with MAC: {mac_address}")
+
+            # create an alert object with the relevant information about the detected ARP spoofing attack
+            alert = Alert(
+                attack_type="ARP_SPOOF",
+                source_ip=ip_address,
+                severity="HIGH",
+                message=f"MAC changed from {table[ip_address]} to {mac_address}",
+                extra={"old_mac": table[ip_address], "new_mac": mac_address}
+            )
+            dispatch_alert(alert)
     else:
         # new IP address, add it to the MAC table
         table[ip_address] = mac_address
