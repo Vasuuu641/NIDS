@@ -6,7 +6,7 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-import logging
+
 
 # Define the SEVERITY colors
 SEVERITY_COLORS = {
@@ -15,17 +15,6 @@ SEVERITY_COLORS = {
     "HIGH": "\033[91m"    # Red
 }
 RESET_COLOR = "\033[0m"
-
-# Ensure that logs exist and keep up with the current log file
-Path("logs").mkdir(exist_ok=True)
-
-_handler = logging.FileHandler("logs/alerts.log")
-_handler.setFormatter(logging.Formatter("%(message)s"))
-
-_logger = logging.getLogger("nids.alerts")
-_logger.setLevel(logging.INFO)
-_logger.addHandler(_handler)
-
 
 # defining an alert data structure to hold the relevant information about detected attacks
 @dataclass
@@ -45,4 +34,4 @@ def dispatch_alert(alert: Alert):
         f"{alert.attack_type} | src: {alert.source_ip} | {alert.message}"
     )
     print(f"{color}{line}{RESET_COLOR}")  # print to console with color
-    _logger.info(line)  # log file gets plain text, no ANSI codes
+    
