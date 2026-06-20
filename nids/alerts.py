@@ -9,8 +9,6 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from pathlib import Path
-
 
 # Define the SEVERITY colors
 SEVERITY_COLORS = {
