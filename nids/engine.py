@@ -13,28 +13,29 @@ from nids.rules.syn_flood import process_packet as detect_syn_flood
 # step 5 - continued - import capture.py
 from nids.capture import start_capture
 
+# wrap the below code in a run function
+def run(interface = None):
+    
+    with open("config/config.yaml", "r") as f:
+        config = yaml.safe_load(f)
 
-with open("config/config.yaml", "r") as f:
-    config = yaml.safe_load(f)
+    # step 3 : decided which detectors are enabled based on the configuration settings
+    enabled_detectors = []
+    if config.get("rules", {}).get("arp_spoof", {}).get("enabled", False):
+        enabled_detectors.append(detect_arp_spoof)
+    if config.get("rules", {}).get("port_scan", {}).get("enabled", False):
+        enabled_detectors.append(detect_port_scan)
+    if config.get("rules", {}).get("syn_flood", {}).get("enabled", False):
+        enabled_detectors.append(detect_syn_flood)
 
-# step 3 : decided which detectors are enabled based on the configuration settings
-enabled_detectors = []
-if config.get("rules", {}).get("arp_spoof", {}).get("enabled", False):
-    enabled_detectors.append(detect_arp_spoof)
-if config.get("rules", {}).get("port_scan", {}).get("enabled", False):
-    enabled_detectors.append(detect_port_scan)
-if config.get("rules", {}).get("syn_flood", {}).get("enabled", False):
-    enabled_detectors.append(detect_syn_flood)
+    # step 4: callback function to call all enabled detectors for each packet
+    def call_detectors(packet):
+        for detector in enabled_detectors:
+            detector(packet)
 
-# step 4: callback function to call all enabled detectors for each packet
-def call_detectors(packet):
-    for detector in enabled_detectors:
-        detector(packet)
+    # step 5: hand this over to capture.py to call this function for each packet captured
+    capture_interface = interface or config["capture"]["interface"]
+    start_capture(call_detectors, "ip and tcp", capture_interface)
 
-# step 5: hand this over to capture.py to call this function for each packet captured
-
-# read the interface from config.yaml file
-config_interface = config["capture"]["interface"]
-
-# call start capture from capture.py with the callback function, filter string and interface
-start_capture(call_detectors, "ip and tcp",config_interface)
+if __name__ == "__main__":
+    run()

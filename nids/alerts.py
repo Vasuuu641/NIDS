@@ -9,6 +9,7 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime
+from nids.storage import save
 
 # Define the SEVERITY colors
 SEVERITY_COLORS = {
@@ -36,4 +37,4 @@ def dispatch_alert(alert: Alert):
         f"{alert.attack_type} | src: {alert.source_ip} | {alert.message}"
     )
     print(f"{color}{line}{RESET_COLOR}")  # print to console with color
-    
+    save(alert)
