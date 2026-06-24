@@ -102,9 +102,9 @@
 - [x] ARP spoofing detector + tests passing
 - [x] Port scan detector + tests passing
 - [x] SYN flood detector + tests passing
-- [] Alert manager
-- [] Storage and logging
-- [ ] CLI interface
+- [x] Alert manager
+- [x] Storage and logging
+- [x] CLI interface
 - [ ] CICIDS2017 dataset validation documented
 - [ ] ML anomaly detection layer
 - [ ] Flask dashboard
