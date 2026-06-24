@@ -5,7 +5,7 @@
 # Call into engine.py to start the detection process
 
 import argparse
-from nids.engine import engine
+from nids import engine
 
 
 def main():
