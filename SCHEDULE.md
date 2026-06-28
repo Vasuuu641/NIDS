@@ -23,26 +23,26 @@
 **Goal: Rules-based detection — working core engine**
 
 ### Week 1 — June 2 → June 8
-- [ ] `capture.py` — live packet capture with Scapy
-- [ ] `capture.py` — interface selection from config.yaml
-- [ ] `rules/arp_spoof.py` — IP-to-MAC mapping table
-- [ ] `rules/arp_spoof.py` — flag conflicting ARP replies
-- [ ] `tests/test_arp_spoof.py` — unit tests passing
+- [x] `capture.py` — live packet capture with Scapy
+- [x] `capture.py` — interface selection from config.yaml
+- [x] `rules/arp_spoof.py` — IP-to-MAC mapping table
+- [x] `rules/arp_spoof.py` — flag conflicting ARP replies
+- [x] `tests/test_arp_spoof.py` — unit tests passing
 
 ### Week 2 — June 9 → June 15
-- [ ] `rules/port_scan.py` — count unique destination ports per source IP
-- [ ] `rules/port_scan.py` — configurable time window from config.yaml
-- [ ] `rules/syn_flood.py` — SYN packet count tracking per source IP
-- [ ] `rules/syn_flood.py` — SYN/ACK completion ratio tracking
-- [ ] `tests/test_port_scan.py` — unit tests passing
-- [ ] `tests/test_syn_flood.py` — unit tests passing
+- [x] `rules/port_scan.py` — count unique destination ports per source IP
+- [x] `rules/port_scan.py` — configurable time window from config.yaml
+- [x] `rules/syn_flood.py` — SYN packet count tracking per source IP
+- [x] `rules/syn_flood.py` — SYN/ACK completion ratio tracking
+- [x] `tests/test_port_scan.py` — unit tests passing
+- [x] `tests/test_syn_flood.py` — unit tests passing
 
 ### Week 3 — June 16 → June 22
-- [ ] `engine.py` — orchestrate all three detectors from one entry point
-- [ ] `alerts.py` — console warning output with timestamp, source IP, attack type
-- [ ] `storage.py` — structured log file output to logs/alerts.log
-- [ ] `cli.py` — run from terminal with interface argument
-- [ ] End-to-end test — run engine against live traffic on Linux VM
+- [x] `engine.py` — orchestrate all three detectors from one entry point
+- [x] `alerts.py` — console warning output with timestamp, source IP, attack type
+- [x] `storage.py` — structured log file output to logs/alerts.log
+- [x] `cli.py` — run from terminal with interface argument
+- [x] End-to-end test — run engine against live traffic on Linux VM
 
 ---
 
@@ -50,7 +50,7 @@
 **Goal: Testing, validation, and ML layer**
 
 ### Week 1 — June 23 → June 29
-- [ ] Download CICIDS2017 dataset from unb.ca/cic/datasets/ids-2017.html
+- [x] Download CICIDS2017 dataset from unb.ca/cic/datasets/ids-2017.html
 - [ ] Run ARP spoof detector against labeled dataset — record detection rate
 - [ ] Run port scan detector against labeled dataset — record detection rate
 - [ ] Run SYN flood detector against labeled dataset — record detection rate
