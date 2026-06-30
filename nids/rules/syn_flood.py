@@ -8,7 +8,7 @@
 # Do something to get the alert to fire only once and not repeatedly for the same source IP. This can be done by maintaining a state for each source IP and only triggering the alert when the conditions are met for the first time within the time window.
 from collections import defaultdict
 from datetime import datetime, timedelta
-from nids.alerts import Alert, dispatch_alert
+from nids.alerts import Alert, dispatch
 from scapy.all import TCP, IP
 
 # Define the thresholds and time window
@@ -40,9 +40,8 @@ def check_syn_flood(key):
             source_ip=attacker,
             severity="HIGH",
             message=f"Potential SYN flood: {attacker} flooding {target}:{port}!",
-            extra={"target": target, "port": port}
         )
-        dispatch_alert(alert)
+        dispatch(alert)
         counters['alerted'] = True
    
 

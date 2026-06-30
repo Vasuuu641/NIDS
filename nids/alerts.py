@@ -9,7 +9,6 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from nids.storage import save
 
 # Define the SEVERITY colors
 SEVERITY_COLORS = {
@@ -27,14 +26,14 @@ class Alert:
     severity: str             # "LOW", "MEDIUM", "HIGH"
     message: str              # human-readable description
     timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
-    extra: dict = field(default_factory=dict)  # e.g. {"mac": "...", "ports_scanned": 42}
+    
 
 # dispatch function to handle alerts based on their severity
-def dispatch_alert(alert: Alert):
+def dispatch(alert: Alert):
     color = SEVERITY_COLORS.get(alert.severity, "")
     line = (
         f"[{alert.timestamp}] [{alert.severity}] "
         f"{alert.attack_type} | src: {alert.source_ip} | {alert.message}"
     )
     print(f"{color}{line}{RESET_COLOR}")  # print to console with color
-    save(alert)
+    
