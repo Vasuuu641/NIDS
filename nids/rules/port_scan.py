@@ -6,7 +6,7 @@
 
 from scapy.all import TCP
 from collections import defaultdict
-from nids.alerts import Alert, dispatch_alert
+from nids.alerts import Alert, dispatch
 import time
 
 
@@ -14,7 +14,7 @@ import time
 connection_tracker = defaultdict(lambda: {'ports': set(), 'first_seen': time.time(), 'alerted': False})
 
 # port scanning detection function
-def detect_port_scan(packet, tracker = None, threshold = 15, time_window = 10, alert_callback = dispatch_alert):
+def detect_port_scan(packet, tracker = None, threshold = 15, time_window = 10):
     # step 1: check for ignore cases - bail early if packet is irrelevant
 
     # not TCP - return
@@ -58,10 +58,10 @@ def detect_port_scan(packet, tracker = None, threshold = 15, time_window = 10, a
         source_ip=src_ip,
         severity="MEDIUM",
         message=f"Port scan detected on ports: {tracker[src_ip]['ports']}",
-        extra={"ports": list(tracker[src_ip]['ports'])}
     )
-        alert_callback(alert)
+        
         tracker[src_ip]['alerted'] = True  
+        return alert  # return the alert for further processing if needed
 
         
     

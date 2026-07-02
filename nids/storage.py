@@ -18,3 +18,4 @@ def save(alert: Alert) -> None:
         f"{alert.attack_type} | src: {alert.source_ip} | {alert.message}"
     )
     _logger.info(line)
+    _handler.flush()
