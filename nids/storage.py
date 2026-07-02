@@ -17,6 +17,5 @@ def save(alert: Alert) -> None:
         f"[{alert.timestamp}] [{alert.severity}] "
         f"{alert.attack_type} | src: {alert.source_ip} | {alert.message}"
     )
-    print(f"DEBUG: writing to log: {line}")
     _logger.info(line)
     _handler.flush()
