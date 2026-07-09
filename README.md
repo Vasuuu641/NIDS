@@ -79,7 +79,7 @@ Monitors the ratio of SYN packets to completed TCP handshakes per source IP. A h
 
 ---
 
-## 🤖 ML Anomaly Detection *(Phase 2)*
+## 🤖 ML Anomaly Detection *(Phase 2)* - Not part of CS50 Python
 
 In addition to rule-based detection, an Isolation Forest model trained on the [CICIDS2017 dataset](https://www.unb.ca/cic/datasets/ids-2017.html) detects anomalous traffic patterns that explicit rules may miss.
 
@@ -125,7 +125,7 @@ When an attack pattern is detected the system:
 
 ---
 
-## 🖥️ Dashboard *(Phase 3)*
+## 🖥️ Dashboard *(Phase 3)* - Not part of CS50 Python
 
 A lightweight Flask dashboard will visualize:
 - Live network traffic by protocol
