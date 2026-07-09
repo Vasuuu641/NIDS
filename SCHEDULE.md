@@ -8,14 +8,14 @@
 ## Warm-Up — May 20 → June 1 (2 weeks)
 **Goal: Scapy fundamentals before touching NIDS**
 
-- [ ] Read Scapy official documentation
-- [ ] Write standalone script — capture and print ARP packets
-- [ ] Write standalone script — print TCP headers
-- [ ] Write standalone script — filter packets by protocol
-- [ ] Set up Linux VM (Kali or Ubuntu) — all NIDS work runs here
-- [ ] Understand ARP spoofing at packet level
-- [ ] Understand TCP three-way handshake at packet level
-- [ ] Understand how port scanning works at packet level
+- [x] Read Scapy official documentation
+- [x] Write standalone script — capture and print ARP packets
+- [x] Write standalone script — print TCP headers
+- [x] Write standalone script — filter packets by protocol
+- [x] Set up Linux VM (Kali or Ubuntu) — all NIDS work runs here
+- [x] Understand ARP spoofing at packet level
+- [x] Understand TCP three-way handshake at packet level
+- [x] Understand how port scanning works at packet level
 
 ---
 
@@ -116,10 +116,4 @@
 
 ## Notes
 
-**On config.yaml** — externalise all thresholds here, never hardcode them in detector files. This makes tuning easy and signals good architectural thinking.
-
-**On commit messages** — commit after each checklist item, not at the end of each week. A clean commit history showing steady progress over two months is itself a portfolio artifact.
-
-**On the writeup** — docs/writeup.md is as important as the code. Explain why you made each design decision, what you tried that didn't work, and what you'd do differently. This is what you reference in your interview.
-
-**On connecting to your other work** — whenever you encounter an attack pattern on HackTheBox, ask yourself: would my NIDS detect this? If not, why not? Document those observations. It turns two separate activities into one continuous learning loop.
+**For CS50 Python submission**: The NIDS project will be extended for phase 2 and 3, however, for the CS50 Python submission, only phase 1 is required. The submission will include the packet capture module, the three detectors, and the alert manager. The ML layer and Flask dashboard are optional extensions for personal learning and portfolio building.
