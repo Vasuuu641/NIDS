@@ -1,5 +1,7 @@
 # 🛡️ Network Intrusion Detection System (NIDS)
 
+# Video URL: [https://youtu.be/c0ZUkHvRh90?si=Ym_NS7sJX6a7y3Lj]
+
 A Python-based network intrusion detection system that monitors live network traffic and detects three common network-layer attacks in real time — **ARP Spoofing**, **Port Scanning**, and **SYN Flooding**. Built as a practical application of CCNA-level networking knowledge combined with Python packet analysis.
 
 Detection is handled in two layers: rule-based logic for known attack patterns, and an ML-based anomaly detection layer (Isolation Forest) trained on the CICIDS2017 dataset to catch variations that rules alone miss.
