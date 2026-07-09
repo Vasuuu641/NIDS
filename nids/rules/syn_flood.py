@@ -12,7 +12,7 @@ from nids.alerts import Alert
 from scapy.all import TCP, IP
 
 # Define the thresholds and time window
-SYN_THRESHOLD = 100  # Number of SYN packets to trigger an alert
+SYN_THRESHOLD = 10  # Number of SYN packets to trigger an alert
 ACK_THRESHOLD = 10   # Number of ACK packets to consider the connection healthy
 TIME_WINDOW = timedelta(seconds=10)  # Time window for counting packets
 
