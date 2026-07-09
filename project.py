@@ -44,6 +44,7 @@ def main():
     config = load_config()
     detectors = get_enabled_detectors(config)
     callback = build_packet_callback(detectors)
+    print(f"Capturing on: {args.interface}")
     start_capture(callback, "arp or (ip and tcp)", args.interface)
 
 
