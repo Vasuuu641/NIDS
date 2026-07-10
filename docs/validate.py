@@ -1,9 +1,22 @@
-import sys
-from scapy.all import rdpcap, Packet
+from scapy.all import rdpcap
 from nids.rules.arp_spoof import detect_arp_spoof
 from nids.rules.port_scan import detect_port_scan
 from nids.rules.syn_flood import process_packet as detect_syn_flood
+from datetime import datetime
 
+def make_port_scan_validator():
+    tracker = {}
+    def validate(packet):
+        now = float(packet.time)
+        return detect_port_scan(packet, tracker=tracker, now=now)
+    return validate
+
+def make_syn_flood_validator():
+    tracker = {}
+    def validate(packet):
+        now = datetime.fromtimestamp(float(packet.time))
+        return detect_syn_flood(packet, now=now)
+    return validate
 
 def run_validation(pcap_path: str, detector_fn, label: str) -> dict:
     print(f"\nRunning {label} against {pcap_path}...")
@@ -55,14 +68,14 @@ if __name__ == "__main__":
     for f in ["port_scan_fast.pcapng", "port_scan_normal.pcapng", "port_scan_slow.pcapng"]:
         results.append(run_validation(
             f"/home/vasu/wireshark-captures/{f}",
-            detect_port_scan,
+            make_port_scan_validator(),
             "PORT_SCAN"
         ))
 
     # SYN flood validation
     results.append(run_validation(
         "/home/vasu/wireshark-captures/SYN_flood.pcapng",
-        detect_syn_flood,
+        make_syn_flood_validator(),
         "SYN_FLOOD"
     ))
 

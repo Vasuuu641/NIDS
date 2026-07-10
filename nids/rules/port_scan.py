@@ -14,7 +14,7 @@ import time
 connection_tracker = defaultdict(lambda: {'ports': set(), 'first_seen': time.time(), 'alerted': False})
 
 # port scanning detection function
-def detect_port_scan(packet, tracker = None, threshold = 15, time_window = 10):
+def detect_port_scan(packet, tracker = None, threshold = 15, time_window = 10, now = None):
     # step 1: check for ignore cases - bail early if packet is irrelevant
 
     # not TCP - return
@@ -33,12 +33,15 @@ def detect_port_scan(packet, tracker = None, threshold = 15, time_window = 10):
     if tracker is None:
         tracker = connection_tracker
 
+    if now is None:
+        now = time.time()
+
     # step 2 - extract identity - src_ip and dst_port
     src_ip = packet['IP'].src
     dst_port = tcp_layer.dport
 
     # step 3 - initialize or fix the tracker entry for this source IP
-    now = time.time()
+    now = now if now is not None else time.time()
 
     if src_ip not in tracker:
         tracker[src_ip] = {'ports': set(), 'first_seen': now, 'alerted': False}
