@@ -180,11 +180,11 @@ Attack simulation scripts for local isolated testing are included in `tests/`.
 - [x] ARP spoofing detector
 - [x] Port scan detector
 - [x] SYN flood detector
-- [ ] Alert manager
-- [ ] Storage and logging
-- [ ] CLI interface
-- [ ] Unit tests passing
-- [ ] CICIDS2017 dataset validation
+- [x] Alert manager
+- [x] Storage and logging
+- [x] CLI interface
+- [x] Unit tests passing
+- [x] CICIDS2017 dataset validation
 - [ ] ML anomaly detection layer
 - [ ] Flask dashboard
 

@@ -1,8 +1,5 @@
 # NIDS Build Schedule
 
-> **Real start date: May 20, 2026**
-> Finish CS50 Python, CS50 Cybersecurity, and semester 6 exams before touching any code.
-
 ---
 
 ## Warm-Up — May 20 → June 1 (2 weeks)
@@ -51,11 +48,11 @@
 
 ### Week 1 — June 23 → June 29
 - [x] Download CICIDS2017 dataset from unb.ca/cic/datasets/ids-2017.html
-- [ ] Run ARP spoof detector against labeled dataset — record detection rate
-- [ ] Run port scan detector against labeled dataset — record detection rate
-- [ ] Run SYN flood detector against labeled dataset — record detection rate
-- [ ] Record false positive rate per detector
-- [ ] Write validation results to docs/validation.md
+- [x] Run ARP spoof detector against labeled dataset — record detection rate
+- [x] Run port scan detector against labeled dataset — record detection rate
+- [x] Run SYN flood detector against labeled dataset — record detection rate
+- [x] Record false positive rate per detector
+- [x] Write validation results to docs/validation.md
 
 ### Week 2 — June 30 → July 6
 - [ ] Create `nids/ml/` folder

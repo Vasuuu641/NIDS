@@ -17,14 +17,16 @@ ACK_THRESHOLD = 10   # Number of ACK packets to consider the connection healthy
 TIME_WINDOW = timedelta(seconds=10)  # Time window for counting packets
 
 # Modified data structure - 1 dictionary keyed by IP address of attacker which holds the syn_count, syn_Ack_count and the window start time
-ip_dict = defaultdict(lambda: {'syn_count': 0, 'synack_count': 0, 'window_start': datetime.now(), 'alerted': False})
+ip_dict = defaultdict(lambda: {'syn_count': 0, 'synack_count': 0, 'window_start': None, 'alerted': False})
 
 
 # Function to reset counters for a specific source IP
-def reset_counters(key):
+def reset_counters(key, now = None):
+    if now is None:
+        now = datetime.now()
     ip_dict[key]['syn_count'] = 0
     ip_dict[key]['synack_count'] = 0
-    ip_dict[key]['window_start'] = datetime.now()
+    ip_dict[key]['window_start'] = now
     ip_dict[key]['alerted'] = False
 
 
@@ -45,12 +47,16 @@ def check_syn_flood(key):
    
 # function to process each packet and update counters
 # logic needs to change to map each syn_ack differently
-def process_packet(packet):
+def process_packet(packet, now=None):
     if not packet.haslayer(TCP):
         return
     
     if not packet.haslayer(IP):
         return
+    
+    if now is None:
+        now = datetime.now()
+
     
     tcp_flags = packet[TCP].flags
     
@@ -72,10 +78,13 @@ def process_packet(packet):
     
     # define the key to use everywhere for better design
     key = (attacker_ip, target_ip, target_port)
+
+    if ip_dict[key]['window_start'] is None:
+        ip_dict[key]['window_start'] = now
     
     # step 4: reset the window if the time window has expired
-    if datetime.now() - ip_dict[key]['window_start'] > TIME_WINDOW:
-        reset_counters(key)
+    if now - ip_dict[key]['window_start'] > TIME_WINDOW:
+        reset_counters(key, now)
 
     # step 5: update the counters based on the packet type
     # for syn only packet, we need attacker ip, target ip and target port
