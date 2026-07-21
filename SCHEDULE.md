@@ -52,7 +52,7 @@
 - [x] Run port scan detector against labeled dataset — record detection rate
 - [x] Run SYN flood detector against labeled dataset — record detection rate
 - [x] Record false positive rate per detector
-- [ ] Write validation results to docs/validation.md
+- [x] Write validation results to docs/validation.md
 
 ### Week 2 — June 30 → July 6
 - [ ] Create `nids/ml/` folder
