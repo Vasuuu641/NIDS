@@ -61,7 +61,7 @@
 - [ ] Train model on CICIDS2017 dataset
 - [ ] Compare ML detection rates vs rule-based detection rates
 - [ ] Document comparison results in docs/ml_comparison.md
-- [ ] Add scikit-learn, pandas, numpy to requirements.txt
+- [x] Add scikit-learn, pandas, numpy to requirements.txt
 
 ---
 
