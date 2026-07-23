@@ -58,9 +58,9 @@
 - [x] Create `nids/ml/` folder
 - [x] `nids/ml/features.py` — extract features from packet data (packet rate, SYN/ACK ratio, unique ports, ARP frequency)
 - [x] `nids/ml/anomaly.py` — Isolation Forest model using scikit-learn
-- [ ] Train model on CICIDS2017 dataset
-- [ ] Compare ML detection rates vs rule-based detection rates
-- [ ] Document comparison results in docs/ml_comparison.md
+- [x] Train model on CICIDS2017 dataset
+- [x] Compare ML detection rates vs rule-based detection rates
+- [x] Document comparison results in docs/ml_comparison.md
 - [x] Add scikit-learn, pandas, numpy to requirements.txt
 
 ---
