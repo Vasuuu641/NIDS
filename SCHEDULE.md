@@ -68,9 +68,9 @@
 ## Phase 3 — July 7 → July 13 (1 week)
 **Goal: Flask dashboard**
 
-- [ ] Create `nids/dashboard/` folder
-- [ ] `nids/dashboard/app.py` — Flask web server serving engine data
-- [ ] `nids/dashboard/templates/` — dashboard HTML template
+- [x] Create `nids/dashboard/` folder
+- [x] `nids/dashboard/app.py` — Flask web server serving engine data
+- [x] `nids/dashboard/templates/` — dashboard HTML template
 - [ ] Chart.js — live traffic by protocol
 - [ ] Chart.js — real-time alerts feed
 - [ ] Chart.js — per-source IP traffic patterns
