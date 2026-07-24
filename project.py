@@ -1,16 +1,14 @@
 import yaml
-from nids.rules.arp_spoof import detect_arp_spoof
-from nids.rules.port_scan import detect_port_scan
-from nids.rules.syn_flood import process_packet as detect_syn_flood
-from nids.capture import start_capture
-from nids.alerts import dispatch
-from nids.storage import save
 import argparse
 import threading
 from collections import deque
+from nids.rules.arp_spoof import detect_arp_spoof
+from nids.rules.port_scan import detect_port_scan
+from nids.rules.syn_flood import process_packet as detect_syn_flood
+from nids.alerts import dispatch
+from nids.storage import save
 from nids import engine
 
-# alert queue
 alert_queue = deque(maxlen=1000)
 
 
@@ -38,32 +36,44 @@ def build_packet_callback(detectors):
             if alert:
                 dispatch(alert)
                 save(alert)
+                alert_queue.append(alert)  # push to dashboard
     return call_detectors
 
 
 def main():
     parser = argparse.ArgumentParser(description="Network Intrusion Detection System")
-    parser.add_argument("-i", "--interface", required=True,
-                        help="Network interface to monitor (e.g. eth0, lo)")
+    parser.add_argument(
+        "-i", "--interface",
+        required=True,
+        help="Network interface to monitor (e.g. eth0, lo)"
+    )
+    parser.add_argument(
+        "--no-dashboard",
+        action="store_true",
+        help="Run engine only, without the Flask dashboard"
+    )
     args = parser.parse_args()
 
     config = load_config()
     detectors = get_enabled_detectors(config)
     callback = build_packet_callback(detectors)
-    print(f"Capturing on: {args.interface}")
-    start_capture(callback, "arp or (ip and tcp)", args.interface)
 
-    # start the engine in the background thread
-    engine_thread = threading.Thread(target=engine.run, args=args.interface, daemon=True)
+    print(f"Capturing on: {args.interface}")
+
+    # start engine in background thread
+    engine_thread = threading.Thread(
+        target=engine.run,
+        args=(args.interface, callback),  # tuple — critical
+        daemon=True
+    )
     engine_thread.start()
 
     if args.no_dashboard:
         try:
             engine_thread.join()
         except KeyboardInterrupt:
-                print("\nStopping the engine...")
+            print("\nStopping engine")
     else:
-        # start the Flask dashboard in the main thread
         print("Dashboard running at http://localhost:5000")
         from nids.dashboard.app import create_app
         app = create_app(alert_queue)

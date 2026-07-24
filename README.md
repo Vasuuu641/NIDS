@@ -186,7 +186,7 @@ Attack simulation scripts for local isolated testing are included in `tests/`.
 - [x] Unit tests passing
 - [x] CICIDS2017 dataset validation
 - [x] ML anomaly detection layer
-- [ ] Flask dashboard
+- [x] Flask dashboard
 
 ---
 
