@@ -1,47 +1,43 @@
-# this is the file where all 3 attack types will be orchestrated and executed. The engine will be responsible for coordinating the different attack types and ensuring that they are executed in a timely and efficient manner. It will also handle any necessary communication between the different components of the system, such as the attack modules and the network interface.
-# central orchestration point to run all detectors
-
-# step 1 : read config.yaml file and load the configuration settings
 import yaml
-
-# step 2: import the necessary modules for each attack type
-from nids.alerts import dispatch
-from nids.rules.arp_spoof import detect_arp_spoof
-from nids.rules.port_scan import detect_port_scan
-from nids.rules.syn_flood import process_packet as detect_syn_flood
-
-# step 5 - continued - import capture.py
 from nids.capture import start_capture
-from nids.storage import save
 
-# wrap the below code in a run function
-def run(interface = None):
-    
-    with open("config/config.yaml", "r") as f:
-        config = yaml.safe_load(f)
 
-    print(f"Capturing on: {interface}") 
+def load_config(path: str = "config/config.yaml") -> dict:
+    with open(path, "r") as f:
+        return yaml.safe_load(f)
 
-    # step 3 : decided which detectors are enabled based on the configuration settings
-    enabled_detectors = []
-    if config.get("rules", {}).get("arp_spoof", {}).get("enabled", False):
-        enabled_detectors.append(detect_arp_spoof)
-    if config.get("rules", {}).get("port_scan", {}).get("enabled", False):
-        enabled_detectors.append(detect_port_scan)
-    if config.get("rules", {}).get("syn_flood", {}).get("enabled", False):
-        enabled_detectors.append(detect_syn_flood)
 
-    # step 4: callback function to call all enabled detectors for each packet
-    def call_detectors(packet):
-        for detector in enabled_detectors:
-            alert = detector(packet)
-            if alert:
-                dispatch(alert)
-                save(alert)  # save the alert to a file or database for later analysis
+def run(interface: str, callback=None) -> None:
+    config = load_config()
 
-    # step 5: hand this over to capture.py to call this function for each packet captured
+    # if no callback passed (e.g. running engine standalone),
+    # build a default one from config
+    if callback is None:
+        from nids.rules.arp_spoof import detect_arp_spoof
+        from nids.rules.port_scan import detect_port_scan
+        from nids.rules.syn_flood import process_packet as detect_syn_flood
+        from nids.alerts import dispatch
+        from nids.storage import save
+
+        enabled_detectors = []
+        rules = config.get("rules", {})
+        if rules.get("arp_spoof", {}).get("enabled", False):
+            enabled_detectors.append(detect_arp_spoof)
+        if rules.get("port_scan", {}).get("enabled", False):
+            enabled_detectors.append(detect_port_scan)
+        if rules.get("syn_flood", {}).get("enabled", False):
+            enabled_detectors.append(detect_syn_flood)
+
+        def callback(packet):
+            for detector in enabled_detectors:
+                alert = detector(packet)
+                if alert:
+                    dispatch(alert)
+                    save(alert)
+
     capture_interface = interface or config["capture"]["interface"]
-    start_capture(call_detectors, "arp or (ip and tcp)", capture_interface)
+    start_capture(callback, "arp or (ip and tcp)", capture_interface)
+
 
 if __name__ == "__main__":
-    run()
+    run("lo")

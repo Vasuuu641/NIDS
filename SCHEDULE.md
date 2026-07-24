@@ -71,25 +71,25 @@
 - [x] Create `nids/dashboard/` folder
 - [x] `nids/dashboard/app.py` — Flask web server serving engine data
 - [x] `nids/dashboard/templates/` — dashboard HTML template
-- [ ] Chart.js — live traffic by protocol
-- [ ] Chart.js — real-time alerts feed
-- [ ] Chart.js — per-source IP traffic patterns
-- [ ] Chart.js — attack frequency over time
-- [ ] Add flask to requirements.txt
-- [ ] End-to-end test — dashboard running while engine detects live traffic
+- [x] Chart.js — live traffic by protocol
+- [x] Chart.js — real-time alerts feed
+- [x] Chart.js — per-source IP traffic patterns
+- [x] Chart.js — attack frequency over time
+- [x] Add flask to requirements.txt
+- [x] End-to-end test — dashboard running while engine detects live traffic
 
 ---
 
 ## Finalisation — July 14 (1 day)
 **Goal: Clean repo, complete documentation**
 
-- [ ] Update README.md checklist — tick off all completed items
+- [x] Update README.md checklist — tick off all completed items
 - [ ] Write docs/writeup.md — design decisions, what failed, what you'd improve, what you learned
-- [ ] Verify .gitignore covers .env and logs/
-- [ ] Verify no sensitive data committed
-- [ ] Verify requirements.txt is accurate and clean (remove requirments.txt typo duplicate)
-- [ ] Push final version to GitHub
-- [ ] Pin repo on GitHub profile
+- [x] Verify .gitignore covers .env and logs/
+- [x] Verify no sensitive data committed
+- [x] Verify requirements.txt is accurate and clean (remove requirments.txt typo duplicate)
+- [x] Push final version to GitHub
+- [x] Pin repo on GitHub profile
 
 ---
 
@@ -102,12 +102,12 @@
 - [x] Alert manager
 - [x] Storage and logging
 - [x] CLI interface
-- [ ] CICIDS2017 dataset validation documented
-- [ ] ML anomaly detection layer
-- [ ] Flask dashboard
+- [x] CICIDS2017 dataset validation documented
+- [x] ML anomaly detection layer
+- [x] Flask dashboard
 - [ ] Technical writeup in docs/
-- [ ] README checklist fully ticked
-- [ ] Repo pinned on GitHub profile
+- [x] README checklist fully ticked
+- [x] Repo pinned on GitHub profile
 
 ---
 
