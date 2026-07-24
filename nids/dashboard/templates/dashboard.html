@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block title %}NIDS — Dashboard{% endblock %}
+
+{% block styles %}
+<style>
+    /* ── Header ── */
+    header {
+        background: #161b22;
+        border-bottom: 1px solid #30363d;
+        padding: 14px 28px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .shield-icon {
+        width: 26px;
+        height: 26px;
+        color: #388bfd;
+    }
+
+    .header-brand {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #e6edf3;
+    }
+
+    .header-subtitle {
+        font-size: 0.8rem;
+        color: #8b949e;
+    }
+
+    .live-badge {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(63,185,80,0.1);
+        border: 1px solid rgba(63,185,80,0.3);
+        border-radius: 20px;
+        padding: 4px 12px;
+        font-size: 0.8rem;
+        color: #3fb950;
+        font-weight: 600;
+    }
+
+    .live-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #3fb950;
+        animation: pulse 2s infinite;
+    }
+
+    .live-dot.disconnected {
+        background: #f85149;
+        animation: none;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50%       { opacity: 0.3; }
+    }
+
+    /* ── Stats Bar ── */
+    .stats-bar {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        border-bottom: 1px solid #30363d;
+    }
+
+    .stat-card {
+        background: #161b22;
+        padding: 22px 28px;
+        border-right: 1px solid #30363d;
+    }
+
+    .stat-card:last-child { border-right: none; }
+
+    .stat-label {
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: #8b949e;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 8px;
+    }
+
+    .stat-value {
+        font-size: 2.2rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    .stat-value.white { color: #e6edf3; }
+    .stat-value.red   { color: #f85149; }
+    .stat-value.amber { color: #d29922; }
+    .stat-value.green { color: #3fb950; }
+
+    /* ── Main Grid ── */
+    .main-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        padding: 20px 28px;
+    }
+
+    canvas { width: 100% !important; }
+    #frequencyChart { max-height: 240px; }
+    #typeChart      { max-height: 240px; }
+    #ipChart        { max-height: 240px; }
+
+    /* ── Alert Feed ── */
+    #alert-feed {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    #alert-feed::-webkit-scrollbar { width: 3px; }
+    #alert-feed::-webkit-scrollbar-track { background: transparent; }
+    #alert-feed::-webkit-scrollbar-thumb {
+        background: #30363d;
+        border-radius: 2px;
+    }
+
+    .alert-item {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 10px;
+        align-items: start;
+        padding: 10px 12px;
+        background: #0d1117;
+        border-radius: 4px;
+        border-left: 3px solid transparent;
+        animation: slide-in 0.25s ease;
+    }
+
+    @keyframes slide-in {
+        from { opacity: 0; transform: translateY(-6px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .alert-item.HIGH   { border-left-color: #f85149; }
+    .alert-item.MEDIUM { border-left-color: #d29922; }
+    .alert-item.LOW    { border-left-color: #3fb950; }
+
+    .severity-badge {
+        font-size: 0.65rem;
+        font-weight: 700;
+        padding: 2px 6px;
+        border-radius: 3px;
+        letter-spacing: 0.5px;
+        white-space: nowrap;
+    }
+
+    .badge-HIGH   { background: rgba(248,81,73,0.15);  color: #f85149; }
+    .badge-MEDIUM { background: rgba(210,153,34,0.15); color: #d29922; }
+    .badge-LOW    { background: rgba(63,185,80,0.15);  color: #3fb950; }
+
+    .alert-body { min-width: 0; }
+
+    .alert-top {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 3px;
+    }
+
+    .alert-type {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: #e6edf3;
+    }
+
+    .alert-ip {
+        font-size: 0.78rem;
+        color: #8b949e;
+    }
+
+    .alert-message {
+        font-size: 0.75rem;
+        color: #8b949e;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .alert-time {
+        font-size: 0.72rem;
+        color: #8b949e;
+        white-space: nowrap;
+        padding-top: 2px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #8b949e;
+        font-size: 0.82rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="main-grid">
+    {% include "partials/frequency_chart.html" %}
+    {% include "partials/type_chart.html" %}
+    {% include "partials/ip_chart.html" %}
+    {% include "partials/alert_feed.html" %}
+</div>
+{% endblock %}
