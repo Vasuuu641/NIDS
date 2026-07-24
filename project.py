@@ -6,6 +6,12 @@ from nids.capture import start_capture
 from nids.alerts import dispatch
 from nids.storage import save
 import argparse
+import threading
+from collections import deque
+from nids import engine
+
+# alert queue
+alert_queue = deque(maxlen=1000)
 
 
 def load_config(path="config/config.yaml"):
@@ -46,6 +52,22 @@ def main():
     callback = build_packet_callback(detectors)
     print(f"Capturing on: {args.interface}")
     start_capture(callback, "arp or (ip and tcp)", args.interface)
+
+    # start the engine in the background thread
+    engine_thread = threading.Thread(target=engine.run, args=args.interface, daemon=True)
+    engine_thread.start()
+
+    if args.no_dashboard:
+        try:
+            engine_thread.join()
+        except KeyboardInterrupt:
+                print("\nStopping the engine...")
+    else:
+        # start the Flask dashboard in the main thread
+        print("Dashboard running at http://localhost:5000")
+        from nids.dashboard.app import create_app
+        app = create_app(alert_queue)
+        app.run(host="0.0.0.0", port=5000, debug=False, use_reloader=False)
 
 
 if __name__ == "__main__":

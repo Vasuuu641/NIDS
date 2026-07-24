@@ -75,7 +75,7 @@
 - [ ] Chart.js — real-time alerts feed
 - [ ] Chart.js — per-source IP traffic patterns
 - [ ] Chart.js — attack frequency over time
-- [ ] Add flask to requirements.txt
+- [x] Add flask to requirements.txt
 - [ ] End-to-end test — dashboard running while engine detects live traffic
 
 ---
