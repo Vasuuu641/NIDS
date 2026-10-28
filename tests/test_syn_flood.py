@@ -1,115 +1,77 @@
-# this is the test file for syn flood attack detection
-# it will test the syn flood detection logic in syn_flood.py
-
 import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-from nids.rules.syn_flood import process_packet, ip_dict, SYN_THRESHOLD, ACK_THRESHOLD, TIME_WINDOW
+from datetime import datetime, timedelta
 from scapy.all import IP, TCP
-from datetime import timedelta
+from nids.rules.syn_flood import (
+    process_packet, ip_dict, SYN_THRESHOLD, ACK_THRESHOLD, TIME_WINDOW
+)
 
-def test_syn_flood_detection():
-    # Reset the ip_dict before the test
-    ip_dict.clear()
-    src_ip = "192.168.1.2"
-    target_ip = "192.168.1.1"
-    target_port = 80
-    key = (src_ip, target_ip, target_port)
+ATTACKER = "192.168.1.2"
+TARGET = "192.168.1.1"
+PORT = 80
+KEY = (ATTACKER, TARGET, PORT)
+T0 = datetime(2026, 1, 1, 12, 0, 0)
 
-    # Create a series of SYN packets from the same source IP
-    src_ip = "192.168.1.2"
-    for _ in range(SYN_THRESHOLD + 1):  # Send one more than the threshold
-        syn_packet = IP(src=src_ip, dst="192.168.1.1") / TCP(sport=12345, dport=80, flags="S")
-        process_packet(syn_packet)
 
-    # Create a series of SYN-ACK packets from the same destination IP
-    for _ in range(ACK_THRESHOLD - 1):  # Send one less than the threshold
-        syn_ack_packet = IP(src="192.168.1.1", dst=src_ip) / TCP(sport=80, dport=12345, flags="SA")
-        process_packet(syn_ack_packet)
+def send_syns(n, now=T0):
+    alerts = []
+    for _ in range(n):
+        pkt = IP(src=ATTACKER, dst=TARGET) / TCP(sport=12345, dport=PORT, flags="S")
+        alert = process_packet(pkt, now=now)
+        if alert:
+            alerts.append(alert)
+    return alerts
 
-    # Check if the alert was raised for the source IP
-    assert ip_dict[key]['alerted'] == True, "Alert should be raised for SYN flood attack"
 
-# test for below threshold so no alert
-def test_no_alert_below_threshold():
-    # Reset the ip_dict before the test
-    ip_dict.clear()
-    src_ip = "192.168.1.2"
-    target_ip = "192.168.1.1"
-    target_port = 80
-    key = (src_ip, target_ip, target_port)
+def send_synacks(n, now=T0):
+    for _ in range(n):
+        pkt = IP(src=TARGET, dst=ATTACKER) / TCP(sport=PORT, dport=12345, flags="SA")
+        process_packet(pkt, now=now)
 
-    # Create a series of SYN packets from the same source IP
-    src_ip = "192.167.1.1"
-    for _ in range(SYN_THRESHOLD - 10):  # Send one less than the threshold
-        syn_packet = IP(src=src_ip, dst="192.168.1.1") / TCP(sport=12345, dport=80, flags="S")
-        process_packet(syn_packet)
 
-    # Check if the alert was raised for the source IP
-    assert ip_dict[key]['alerted'] == False, "No alert should be raised for SYN flood attack"
-
-# test for high synack count so no alert despite many syn packets
-def test_no_alert_high_synack_count():
-    # Reset the ip_dict before the test
-    ip_dict.clear()
-    src_ip = "192.157.1.1"
-    target_ip = "192.168.1.1"
-    target_port = 80
-    key = (src_ip, target_ip, target_port)
-
-    # Create a series of SYN-ACK packets from the same destination IP
-    for _ in range(ACK_THRESHOLD + 10):  # Send more than the threshold
-        syn_ack_packet = IP(src="192.168.1.1", dst=src_ip) / TCP(sport=80, dport=12345, flags="SA")
-        process_packet(syn_ack_packet)
-
-    # Create a series of SYN packets from the same source IP
-    for _ in range(SYN_THRESHOLD + 10):  # Send more than the threshold
-        syn_packet = IP(src=src_ip, dst="192.168.1.1") / TCP(sport=12345, dport=80, flags="S")
-        process_packet(syn_packet)
-
-    # Check if the alert was raised for the source IP
-    assert ip_dict[key]['alerted'] == False, "No alert should be raised for SYN flood attack"
-
-# test to check that alert fires only once per IP address
-def test_alert_fires_once(capsys):
-    # Reset the ip_dict before the test
+def setup_function():
     ip_dict.clear()
 
-    # Create a series of SYN packets from the same source IP
-    src_ip = "192.168.1.2"
-    target_ip = "192.168.1.1"
-    target_port = 80
-    key = (src_ip, target_ip, target_port)
-    for _ in range(SYN_THRESHOLD + 1):  # Send one more than the threshold
-        syn_packet = IP(src=src_ip, dst="192.168.1.1") / TCP(sport=12345, dport=80, flags="S")
-        process_packet(syn_packet)
 
-    # Check if the alert was raised for the source IP
-    assert ip_dict[key]['alerted'] == True, "Alert should be raised for SYN flood attack"
+def test_flood_alerts_once():
+    alerts = send_syns(SYN_THRESHOLD + 1)
+    assert len(alerts) == 1
+    assert alerts[0].attack_type == "SYN_FLOOD"
+    assert alerts[0].source_ip == ATTACKER
+    assert ip_dict[KEY]["alerted"] is True
 
-    # Create another series of SYN packets from the same source IP
-    for _ in range(SYN_THRESHOLD + 1):  # Send one more than the threshold
-        syn_packet = IP(src=src_ip, dst="192.168.1.1") / TCP(sport=12345, dport=80, flags="S")
-        process_packet(syn_packet)
 
-    # Capture the output and check that the alert was not raised again
-    captured = capsys.readouterr()
-    assert captured.out.count("SYN_FLOOD") == 1
+def test_no_alert_at_threshold():
+    # the rule is "more than" the threshold, so exactly SYN_THRESHOLD must not alert
+    assert send_syns(SYN_THRESHOLD) == []
+    assert ip_dict[KEY]["alerted"] is False
 
-def test_window_reset():
-    # Reset the ip_dict before the test
-    ip_dict.clear()
-    src_ip = "192.168.1.3"
-    target_ip = "192.168.1.1"
-    target_port = 80
-    key = (src_ip, target_ip, target_port)
 
-    # Create a series of SYN packets from the same source IP
-    for _ in range(SYN_THRESHOLD + 1):  # Send one more than the threshold
-        syn_packet = IP(src=src_ip, dst="192.168.7.2") / TCP(sport=12345, dport=80, flags="S")
-        process_packet(syn_packet)
+def test_no_alert_when_handshakes_complete():
+    send_synacks(ACK_THRESHOLD + 10)
+    assert send_syns(SYN_THRESHOLD + 10) == []
+    assert ip_dict[KEY]["alerted"] is False
 
-    # Check if the window has been reset after the time window has expired
-    ip_dict[key]['window_start'] -= (TIME_WINDOW + timedelta(seconds=1))
-    process_packet(IP(src=src_ip, dst="192.168.7.3") / TCP(sport=12345, dport=80, flags="S"))
-    assert ip_dict[key]['alerted'] == False, "Alert should not be raised after window reset"
+
+def test_no_repeat_alert_after_first():
+    alerts = send_syns(SYN_THRESHOLD + 1)
+    alerts += send_syns(SYN_THRESHOLD + 1)
+    assert len(alerts) == 1
+
+
+def test_window_expiry_resets_state():
+    send_syns(SYN_THRESHOLD + 1, now=T0)
+    assert ip_dict[KEY]["alerted"] is True
+
+    later = T0 + TIME_WINDOW + timedelta(seconds=1)
+    send_syns(1, now=later)
+    assert ip_dict[KEY]["alerted"] is False
+    assert ip_dict[KEY]["syn_count"] == 1
+
+
+def test_background_traffic_does_not_pollute_key():
+    # a SYN-ACK to the same attacker from a different server uses a different key
+    pkt = IP(src="140.82.113.25", dst=ATTACKER) / TCP(sport=443, dport=48808, flags="SA")
+    process_packet(pkt, now=T0)
+    assert KEY not in ip_dict or ip_dict[KEY]["synack_count"] == 0

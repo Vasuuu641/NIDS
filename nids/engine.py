@@ -40,4 +40,4 @@ def run(interface: str, callback=None) -> None:
 
 
 if __name__ == "__main__":
-    run("lo")
+    run(interface=None)

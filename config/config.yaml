@@ -1,23 +1,22 @@
 capture:
-  interface: wlp0s20f3
+  interface: lo
   promiscuous: true
 
 rules:
+  arp_spoof:
+    enabled: true
   port_scan:
     enabled: true
-    threshold: 20
-    window_seconds: 5
+    threshold: 15
+    window_seconds: 10
   syn_flood:
     enabled: true
     threshold: 100
-    window_seconds: 1
-  arp_spoof:
-    enabled: true
-
-logging:
-  path: logs/events.json
-  level: WARNING
+    min_completion_ratio: 0.2
+    window_seconds: 10
 
 alerts:
   console: true
-  deduplicate_window_seconds: 10
+
+logging:
+  path: logs/alerts.log

@@ -14,7 +14,7 @@ def main():
     )
     parser.add_argument(
         "-i", "--interface",
-        required=True,
+        required=False,
         help="Network interface to monitor (e.g. eth0, wlan0)"
     )
     args = parser.parse_args()

@@ -1,83 +1,58 @@
-# this is where the logic for port scan detection will go
-# main port scanning detection logic - If a specific source IP address attempts to connect to N number of different destination ports on the same 
-# destination IP address within a short time frame, it may indicate a port scan.
+# Port scan detection.
+# If one source IP probes more than `threshold` distinct ports on the same
+# destination IP within `time_window` seconds, it is flagged as a port scan.
+# Only SYN-only packets count, since those are what a SYN scan sends.
+# One alert is raised per (source, destination) pair per window.
 
-# The idea is to detect such behavior by monitoring network traffic and identifying patterns that match the characteristics of a port scan then warn the user about potential threats.
-
-from scapy.all import TCP
-from collections import defaultdict
-from nids.alerts import Alert, dispatch
+from scapy.all import TCP, IP
+from nids.alerts import Alert
 import time
 
+# {(src_ip, dst_ip): {'ports': set(), 'first_seen': timestamp, 'alerted': bool}}
+# TODO: purge stale entries periodically so this doesn't grow forever.
+connection_tracker = {}
 
-# track {source_ip: {ports: set(), first_seen: timestamp}}
-connection_tracker = defaultdict(lambda: {'ports': set(), 'first_seen': time.time(), 'alerted': False})
 
-# port scanning detection function
-def detect_port_scan(packet, tracker = None, threshold = 15, time_window = 10, now = None):
-    # step 1: check for ignore cases - bail early if packet is irrelevant
-
-    # not TCP - return
+def detect_port_scan(packet, tracker=None, threshold=15, time_window=10, now=None):
+    # step 1: ignore irrelevant packets
     if not packet.haslayer(TCP):
-        return
-    
-    # not IP - return
-    if not packet.haslayer('IP'):
-        return
-    
-    # not a SYN only packet - return
+        return None
+    if not packet.haslayer(IP):
+        return None
+
     tcp_layer = packet[TCP]
-    if not (tcp_layer.flags & 0x02) or (tcp_layer.flags & 0x10):
-        return  # not a SYN-only packet
-    
+    if (tcp_layer.flags & 0x12) != 0x02:
+        return None  # not a SYN-only packet
+
     if tracker is None:
         tracker = connection_tracker
-
     if now is None:
         now = time.time()
 
-    # step 2 - extract identity - src_ip and dst_port
-    src_ip = packet['IP'].src
+    # step 2: identify who is probing what
+    src_ip = packet[IP].src
+    dst_ip = packet[IP].dst
     dst_port = tcp_layer.dport
+    key = (src_ip, dst_ip)
 
-    # step 3 - initialize or fix the tracker entry for this source IP
-    now = now if now is not None else time.time()
+    # step 3: create the entry, or start a fresh window if the old one expired
+    if key not in tracker or now - tracker[key]['first_seen'] > time_window:
+        tracker[key] = {'ports': set(), 'first_seen': now, 'alerted': False}
 
-    if src_ip not in tracker:
-        tracker[src_ip] = {'ports': set(), 'first_seen': now, 'alerted': False}
+    # step 4: record the port
+    entry = tracker[key]
+    entry['ports'].add(dst_port)
 
-    # step 4: check window expiry, reset if necessary - reset nust include alert == 'False'
-    if now - tracker[src_ip]['first_seen'] > time_window:
-        tracker[src_ip] = {'ports': set(), 'first_seen': now, 'alerted': False}
-    
-    # step 5: add port to set
-    tracker[src_ip]['ports'].add(dst_port)
+    # step 5: alert once per window when the threshold is crossed
+    if len(entry['ports']) > threshold and not entry['alerted']:
+        entry['alerted'] = True
+        ports = sorted(entry['ports'])
+        return Alert(
+            attack_type="PORT_SCAN",
+            source_ip=src_ip,
+            severity="MEDIUM",
+            message=(f"{src_ip} probed {len(ports)} ports on {dst_ip} "
+                     f"within {time_window}s (e.g. {ports[:10]})"),
+        )
 
-    # step 6: check the alert condition with alerted flag
-    if len(tracker[src_ip]['ports']) > threshold and not tracker[src_ip]['alerted']:
-        # create an alert object with the relevant information about the detected port scan
-        alert = Alert(
-        attack_type="PORT_SCAN",
-        source_ip=src_ip,
-        severity="MEDIUM",
-        message=f"Port scan detected on ports: {tracker[src_ip]['ports']}",
-    )
-        
-        tracker[src_ip]['alerted'] = True  
-        return alert  # return the alert for further processing if needed
-
-        
-    
-    
-
-    
-
-
-    
-   
-
-   
-
-   
-   
-   
+    return None

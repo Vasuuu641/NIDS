@@ -1,96 +1,70 @@
-# this is where the testing for port scan detection will go
-
-# there are 4 - 5 test cases that we can write to test the port scan detection logic.
-# 1. Single SYN to one port - should not trigger an alert
-# 2. SYN to 15 different ports within the time window - should trigger an alert
-# 3. SYN to 15 different ports but spread out over 2 time windows - should not trigger an alert
-# 4. Non - SYN packets should not be counted towards the port scan detection
-# 5. Non - TCP packets should be ignored by the detection logic
-
-import os
-import sys
-from unittest.mock import patch
-
-from scapy.all import IP, TCP, UDP
-import time
+import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
+from scapy.all import IP, TCP, UDP
 from nids.rules.port_scan import detect_port_scan
 
-def test_single_syn():
-    tracker = {}
+
+def syn(src, port, flags="S"):
+    return IP(src=src, dst="10.0.0.1") / TCP(sport=12345, dport=port, flags=flags)
+
+
+def scan(src, ports, tracker, now=1000.0):
+    """Send SYNs to each port and return the list of alerts that came back."""
     alerts = []
-    packet = IP(src="192.168.0.1") / TCP(sport=12345, dport=80, flags="S")
-    detect_port_scan(packet, tracker=tracker, alert_callback=alerts.append)
-    assert len(alerts) == 0
+    for p in ports:
+        alert = detect_port_scan(syn(src, p), tracker=tracker, now=now)
+        if alert:
+            alerts.append(alert)
+    return alerts
 
-def test_syn_to_multiple_ports():
-    tracker = {}
-    alert_messages = []
 
-    # send 16 packets to different ports
-    for port in range(80, 96):
-        packet = IP(src="192.168.2.100") / TCP(sport=12345, dport=port, flags="S")
-        detect_port_scan(packet, tracker=tracker, alert_callback=alert_messages.append)
+def test_single_syn_no_alert():
+    assert scan("192.168.0.1", [80], {}) == []
 
-    assert len(alert_messages) == 1
 
-def test_syn_to_multiple_ports_over_time():
-    tracker = {}
-    alert_messages = []
+def test_exactly_threshold_ports_no_alert():
+    # threshold is 15 and the rule is "more than 15", so 15 ports must not alert
+    assert scan("192.168.2.100", range(80, 95), {}) == []
 
-    # send 15 packets in first window
-    for port in range(80, 95):
-        packet = IP(src="192.168.3.100") / TCP(
-            sport=12345, dport=port, flags="S")
-        detect_port_scan(packet, tracker=tracker,
-                        alert_callback=alert_messages.append)
 
-    # no alert yet — only 15 ports, threshold is 15
-    # now fake that 11 seconds have passed
-    with patch('nids.rules.port_scan.time.time', return_value=time.time() + 11):
-        # send one more packet in the "new" time window
-        packet = IP(src="192.168.3.100") / TCP(
-            sport=12345, dport=100, flags="S")
-        detect_port_scan(packet, tracker=tracker,
-                        alert_callback=alert_messages.append)
+def test_more_than_threshold_alerts_once():
+    alerts = scan("192.168.2.100", range(80, 96), {})
+    assert len(alerts) == 1
+    assert alerts[0].attack_type == "PORT_SCAN"
+    assert alerts[0].source_ip == "192.168.2.100"
 
-    # the window reset so this packet starts a fresh count
-    # no alert should have fired
-    assert len(alert_messages) == 0, f"Expected no alerts, but got: {alert_messages}"
 
-def test_non_syn_packets():
-   tracker = {}
-   alert_messages = []
-
-    # send a SYN-ACK packet
-   packet = IP(src="192.168.100.0") / TCP(sport=12345, dport=80, flags="SA")
-   detect_port_scan(packet, tracker=tracker, alert_callback=alert_messages.append)
-   assert len(alert_messages) == 0
-   assert "192.168.100.0" not in tracker
-
-def test_non_tcp_packets():
-    tracker = {}
-    alert_messages = []
-
-    # send a UDP packet
-    packet = IP(src="192.168.100.3") / UDP(sport=12345, dport=53)
-    detect_port_scan(packet, tracker=tracker, alert_callback=alert_messages.append)
-    assert len(alert_messages) == 0
-    assert "192.168.100.3" not in tracker
-
-# test to send 16 ports then send a few more to see that assert(len(alert_messages) == 1) is still valid and no more alerts are raised
 def test_no_additional_alerts_after_first():
     tracker = {}
-    alert_messages = []
+    alerts = scan("192.168.1.1", range(80, 96), tracker)    # crosses threshold
+    alerts += scan("192.168.1.1", range(96, 110), tracker)  # keeps scanning
+    assert len(alerts) == 1
 
-    # send 16 packets to different ports
-    for port in range(80, 96):
-        packet = IP(src="192.168.1.1") / TCP(sport=12345, dport=port, flags="S")
-        detect_port_scan(packet, tracker=tracker, alert_callback=alert_messages.append)
 
-    # send a few more packets to different ports
-    for port in range(96, 100):
-        packet = IP(src="192.168.1.1") / TCP(sport=12345, dport=port, flags="S")
-        detect_port_scan(packet, tracker=tracker, alert_callback=alert_messages.append)
-        assert len(alert_messages) == 0 or len(alert_messages) == 1
+def test_window_expiry_resets_count():
+    tracker = {}
+    scan("192.168.3.100", range(80, 95), tracker, now=1000.0)         # 15 ports
+    alerts = scan("192.168.3.100", [100], tracker, now=1011.0)        # new window
+    assert alerts == []
+    assert tracker["192.168.3.100"]["ports"] == {100}
+
+
+def test_repeated_same_port_counts_once():
+    tracker = {}
+    scan("192.168.4.1", [80] * 50, tracker)
+    assert len(tracker["192.168.4.1"]["ports"]) == 1
+
+
+def test_non_syn_ignored():
+    tracker = {}
+    pkt = syn("192.168.100.0", 80, flags="SA")
+    assert detect_port_scan(pkt, tracker=tracker, now=1000.0) is None
+    assert "192.168.100.0" not in tracker
+
+
+def test_non_tcp_ignored():
+    tracker = {}
+    pkt = IP(src="192.168.100.3") / UDP(sport=12345, dport=53)
+    assert detect_port_scan(pkt, tracker=tracker, now=1000.0) is None
+    assert "192.168.100.3" not in tracker
