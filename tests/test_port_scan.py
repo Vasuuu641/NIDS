@@ -47,13 +47,13 @@ def test_window_expiry_resets_count():
     scan("192.168.3.100", range(80, 95), tracker, now=1000.0)         # 15 ports
     alerts = scan("192.168.3.100", [100], tracker, now=1011.0)        # new window
     assert alerts == []
-    assert tracker["192.168.3.100"]["ports"] == {100}
+    assert tracker[("192.168.3.100", "10.0.0.1")]["ports"] == {100}
 
 
 def test_repeated_same_port_counts_once():
     tracker = {}
     scan("192.168.4.1", [80] * 50, tracker)
-    assert len(tracker["192.168.4.1"]["ports"]) == 1
+    assert len(tracker[("192.168.4.1", "10.0.0.1")]["ports"]) == 1
 
 
 def test_non_syn_ignored():
